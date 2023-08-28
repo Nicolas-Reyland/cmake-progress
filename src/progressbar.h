@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <bits/types/FILE.h>
 
-#define CMAKE_PG_PASS_THROUGH 0b0001
+#define CMAKE_PB_PASS_THROUGH 0b0001
 
 struct progressbar_t
 {
@@ -15,7 +15,7 @@ struct progressbar_t
     int flags;
 };
 
-int start_progressbar(char *line, size_t len, FILE* out);
+int start_progressbar(char *line, size_t len, FILE* out, int flags);
 
 int update_progressbar(struct progressbar_t* bar, const char* line);
 

@@ -17,7 +17,7 @@
 
 static int draw_progressbar(struct progressbar_t *bar);
 
-int start_progressbar(char *line, size_t len, FILE *out) {
+int start_progressbar(char *line, size_t len, FILE *out, int flags) {
     ssize_t nb_read;
     struct progressbar_t bar;
     int err = 0;
@@ -28,6 +28,7 @@ int start_progressbar(char *line, size_t len, FILE *out) {
         return 1;
     }
     bar.out = out;
+    bar.flags = flags;
 
     // first draw
     (void) draw_progressbar(&bar);
@@ -61,7 +62,7 @@ int start_progressbar(char *line, size_t len, FILE *out) {
         if ((err = update_progressbar(&bar, line))) {
             // newline after progress bar
             fputc('\n', bar.out);
-            if (bar.flags & CMAKE_PG_PASS_THROUGH)
+            if (bar.flags & CMAKE_PB_PASS_THROUGH)
             {
                 fputs(line, stdout);
 #ifdef CMAKE_DEBUG
