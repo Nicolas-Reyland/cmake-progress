@@ -53,3 +53,4 @@ dkms.conf
 
 # Jetbrains
 .idea/
+cmake-build-debug/
