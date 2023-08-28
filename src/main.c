@@ -38,7 +38,12 @@ int main(void)
 #ifdef CMAKE_DEBUG
             printf("Found a match for line '%s'\n", line);
 #endif /* CMAKE_DEBUG */
-            start_progressbar(line, len, out_stream);
+            if (start_progressbar(line, len, out_stream))
+            {
+#ifdef CMAKE_DEBUG
+                fprintf(stderr, "Progressbar failed\n");
+#endif /* CMAKE_DEBUG */
+            }
         }
         else
 #ifdef CMAKE_DEBUG
