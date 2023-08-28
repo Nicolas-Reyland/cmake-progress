@@ -1,7 +1,11 @@
 #include <criterion/criterion.h>
 
+#include <limits.h>
+
 #include "progressbar.h"
 #include "../src/progressbar.h"
+
+#define STRINGIFY(x) #x
 
 Test(read_progressbar, valid_single_digit)
 {
@@ -59,7 +63,7 @@ Test(read_progressbar, valid_variable_digits)
     cr_assert_eq(bar.max, 3456);
 }
 
-Test(read_progressbar, fail_max_short)
+Test(read_progressbar, fail_exceed_max_short)
 {
     struct progressbar_t bar = {
             .max = 5,
@@ -67,4 +71,36 @@ Test(read_progressbar, fail_max_short)
     cr_assert_eq(read_progressbar("[123/654321] ", &bar), 3);
     cr_assert_eq(bar.cur, 123);
     cr_assert_eq(bar.max, 5);
+}
+
+Test(read_progressbar, valid_cur_more_than_max)
+{
+    struct progressbar_t bar;
+    cr_assert_eq(read_progressbar("[5/3] ", &bar), 0);
+    cr_assert_eq(bar.cur, 5);
+    cr_assert_eq(bar.max, 3);
+}
+
+Test(read_progressbar, valid_two_max_shorts)
+{
+    struct progressbar_t bar;
+    cr_assert_eq(read_progressbar("[65535/65535] ", &bar), 0);
+    cr_assert_eq(bar.cur, USHRT_MAX);
+    cr_assert_eq(bar.max, USHRT_MAX);
+}
+
+Test(read_progressbar, valid_cur_max_short)
+{
+    struct progressbar_t bar;
+    cr_assert_eq(read_progressbar("[65535/3] ", &bar), 0);
+    cr_assert_eq(bar.cur, USHRT_MAX);
+    cr_assert_eq(bar.max, 3);
+}
+
+Test(read_progressbar, valid_max_max_short)
+{
+    struct progressbar_t bar;
+    cr_assert_eq(read_progressbar("[3/65535] ", &bar), 0);
+    cr_assert_eq(bar.cur, 3);
+    cr_assert_eq(bar.max, USHRT_MAX);
 }

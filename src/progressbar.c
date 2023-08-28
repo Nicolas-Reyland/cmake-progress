@@ -35,13 +35,13 @@ int read_progressbar(const char* line, struct progressbar_t* bar)
     char *endptr = NULL;
     long cur, max;
     cur = strtol(line + 1, &endptr, 10);
-    if (cur >= USHRT_MAX)
+    if (cur > USHRT_MAX)
         return 1;
     bar->cur = (unsigned short)cur;
     if (*endptr != '/')
        return 2;
     max = strtol(endptr + 1, &endptr, 10);
-    if (max >= USHRT_MAX)
+    if (max > USHRT_MAX)
         return 3;
     bar->max = (unsigned short)max;
     if (*endptr != ']')
