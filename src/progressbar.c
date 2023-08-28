@@ -36,8 +36,11 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
 #if defined(CMAKE_DEBUG) || defined(CMAKE_SLEEP_AFTER_DRAW)
     sleep(1);
 #endif /* CMAKE_DEBUG */
+    int last_print_is_pb = 1;
 
-    while ((nb_read = getline(&line, &len, stdin)) != 0) {
+    while ((nb_read = getline(&line, &len, stdin)) != -1) {
+        if (nb_read == 0)
+            break;
 #ifdef CMAKE_DEBUG
         char *line_no_newline = alloca(nb_read);
         strncpy(line_no_newline, line, nb_read);
@@ -50,8 +53,10 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
         if (regexec(&full_regex, line, 0, NULL, 0) == REG_NOMATCH) {
 #ifndef CMAKE_DEBUG
             // newline after progress bar
-            fputc('\n', bar.out);
+            if (last_print_is_pb)
+                fputc('\n', bar.out);
 #endif /* !CMAKE_DEBUG */
+            last_print_is_pb = 0;
             // pass through next line
             fputs(line, stdout);
 #ifdef CMAKE_DEBUG
@@ -66,23 +71,15 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
         if ((err = update_progressbar(&bar, line))) {
 #ifndef CMAKE_DEBUG
             // newline after progress bar
-            fputc('\n', bar.out);
+            if (last_print_is_pb)
+                fputc('\n', bar.out);
+#else
+            fprintf(stderr, "Progressbar updating failed with code %d\n", err);
 #endif /* !CMAKE_DEBUG */
-            if (bar.flags & CMAKE_PB_PASS_THROUGH)
-            {
-                fputs(line, stdout);
-#ifdef CMAKE_DEBUG
-                if (!debug_line_differs)
-                    fputc('\n', stdout);
-#endif /* CMAKE_DEBUG */
-            } else {
-#ifdef CMAKE_DEBUG
-                fprintf(stderr, "Progressbar updating failed with code %d\n", err);
-#endif /* CMAKE_DEBUG */
-                return 1;
-            }
+            return 1;
         }
         (void) draw_progressbar(&bar);
+        last_print_is_pb = 1;
 #if defined(CMAKE_DEBUG) || defined(CMAKE_SLEEP_AFTER_DRAW)
         sleep(1);
 #endif /* CMAKE_DEBUG */

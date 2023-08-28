@@ -29,6 +29,8 @@ int main(void)
 
     while ((nb_read = getline(&line, &len, stdin)) != -1)
     {
+        if (nb_read == 0)
+            break;
 #ifdef CMAKE_DEBUG
         if (line[nb_read - 1] == '\n')
             line[nb_read - 1] = 0;
