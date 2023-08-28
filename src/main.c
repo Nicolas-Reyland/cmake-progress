@@ -26,7 +26,6 @@ int main(void)
     out_stream = stdout;
 
     full_regex = create_regex(CMAKE_FULL_REGEX_PATTERN);
-    cur_file_index_regex = create_regex(CMAKE_CUR_FILE_INDEX_REGEX_PATTERN);
 
     while ((nb_read = getline(&line, &len, stdin)) != -1)
     {
@@ -39,7 +38,7 @@ int main(void)
 #ifdef CMAKE_DEBUG
             printf("Found a match for line '%s'\n", line);
 #endif /* CMAKE_DEBUG */
-            start_progress_bar(line, len);
+            start_progressbar(line, len, out_stream);
         }
         else
 #ifdef CMAKE_DEBUG
