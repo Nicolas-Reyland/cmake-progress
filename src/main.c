@@ -2,25 +2,19 @@
 #include <stdio.h>
 #include <regex.h>
 
-#define CMAKE_CUR_FILE_INDEX_REGEX_PATTERN "[0-9]\\{1,5\\}"
+#include "re.h"
+#include "progressbar.h"
+
+#define STRINGIFY_MACRO(x) STRINGIFY(x)
+#define STRINGIFY(x) #x
+
+#define CMAKE_FILE_INDEX_MAX_CHARS 5
+#define CMAKE_CUR_FILE_INDEX_REGEX_PATTERN "[0-9]\\{1," STRINGIFY_MACRO(CMAKE_FILE_INDEX_MAX_CHARS) "\\}"
 #define CMAKE_FULL_REGEX_PATTERN "^\\[" CMAKE_CUR_FILE_INDEX_REGEX_PATTERN "/" CMAKE_CUR_FILE_INDEX_REGEX_PATTERN "\\] "
 
 //_Static_assert(sizeof(unsigned short) >= 2, "unsigned short is not at least 2 bytes");
 
-struct progressbar_t
-{
-     unsigned short cur;
-     unsigned short max;
-     unsigned short bar_width;
-};
-
 static FILE* out_stream;
-
-static regex_t full_regex;
-static regex_t cur_file_index_regex;
-
-static void start_progress_bar(char *line, size_t len);
-static regex_t create_regex(const char* pattern);
 
 int main(void)
 {
@@ -59,42 +53,4 @@ int main(void)
     free(line);
 
     return 0;
-}
-
-static struct progressbar_t read_progressbar(const char* line);
-
-void start_progress_bar(char *line, size_t len)
-{
-    ssize_t nb_read;
-    progressbar_t bar = read_progressbar(line);
-
-    while ((nb_read = getline(&line, &len, stdin)) != -1)
-    {
-#ifdef CMAKE_DEBUG
-        if (line[nb_read - 1] == '\n')
-            line[nb_read - 1] = 0;
-        printf("Progress bar with '%s'\n", line);
-#endif /* CMAKE_DEBUG */
-        if (regexec(&full_regex, line, 0, NULL, 0) == REG_NOMATCH)
-            // NOTE: don't consume this line if we want to match with other patterns (can fseek back no ?)
-            return;
-    }
-}
-
-struct progressbar_t read_progressbar(const char* line)
-{
-    struct progressbar_t bar;
-
-    return bar;
-}
-
-regex_t create_regex(const char* pattern)
-{
-    regex_t regex;
-    if (regcomp(&regex, pattern, 0))
-    {
-        fprintf(stderr, "Failed to compile %s\n", pattern);
-        exit(EXIT_FAILURE);
-    }
-    return regex;
 }
