@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#define CMAKE_DF_BAR_WIDTH 30
+
 void start_progress_bar(char *line, size_t len)
 {
     ssize_t nb_read;
@@ -37,7 +39,7 @@ int read_progressbar(const char* line, struct progressbar_t* bar)
         return 1;
     bar->cur = (unsigned short)cur;
     if (*endptr != '/')
-        return 2;
+       return 2;
     max = strtol(endptr + 1, &endptr, 10);
     if (max >= USHRT_MAX)
         return 3;
@@ -46,8 +48,13 @@ int read_progressbar(const char* line, struct progressbar_t* bar)
         return 4;
 
     struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    bar->bar_width = w.ws_col;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
+    {
+        perror("ioctl(winsize)");
+        bar->bar_width = CMAKE_DF_BAR_WIDTH;
+    }
+    else
+        bar->bar_width = w.ws_col;
 
     return 0;
 }

@@ -61,8 +61,10 @@ Test(read_progressbar, valid_variable_digits)
 
 Test(read_progressbar, fail_max_short)
 {
-    struct progressbar_t bar;
-    cr_assert_eq(read_progressbar("[123/654321] ", &bar), 1);
-    cr_assert_eq(bar.cur, 12);
-    cr_assert_eq(bar.max, 34);
+    struct progressbar_t bar = {
+            .max = 5,
+    };
+    cr_assert_eq(read_progressbar("[123/654321] ", &bar), 3);
+    cr_assert_eq(bar.cur, 123);
+    cr_assert_eq(bar.max, 5);
 }
