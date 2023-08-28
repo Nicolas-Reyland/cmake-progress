@@ -19,6 +19,6 @@ int start_progressbar(char *line, size_t len, FILE* out, int flags);
 
 int update_progressbar(struct progressbar_t* bar, const char* line);
 
-int read_progressbar(const char* line, struct progressbar_t* bar, FILE* out);
+int read_progressbar(const char* line, struct progressbar_t* bar);
 
 #endif /* !CMAKE_PROGRESS_PROGRESSBAR_H */

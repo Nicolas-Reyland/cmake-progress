@@ -19,16 +19,17 @@ static int draw_progressbar(struct progressbar_t *bar);
 
 int start_progressbar(char *line, size_t len, FILE *out, int flags) {
     ssize_t nb_read;
-    struct progressbar_t bar;
+    struct progressbar_t bar = {
+            .out = out,
+            .flags = flags,
+    };
     int err = 0;
-    if ((err = read_progressbar(line, &bar, out))) {
+    if ((err = read_progressbar(line, &bar))) {
 #ifdef CMAKE_DEBUG
         fprintf(stderr, "Progressbar reading failed with code %d\n", err);
 #endif /* CMAKE_DEBUG */
         return 1;
     }
-    bar.out = out;
-    bar.flags = flags;
 
     // first draw
     (void) draw_progressbar(&bar);
@@ -36,7 +37,7 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
     sleep(1);
 #endif /* CMAKE_DEBUG */
 
-    while ((nb_read = getline(&line, &len, stdin)) != -1) {
+    while ((nb_read = getline(&line, &len, stdin)) != 0) {
 #ifdef CMAKE_DEBUG
         char *line_no_newline = alloca(nb_read);
         strncpy(line_no_newline, line, nb_read);
@@ -47,26 +48,31 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
 #endif /* CMAKE_DEBUG */
 
         if (regexec(&full_regex, line, 0, NULL, 0) == REG_NOMATCH) {
-            // NOTE: don't consume this line if we want to match with other patterns (can fseek back no ?)
+#ifndef CMAKE_DEBUG
             // newline after progress bar
             fputc('\n', bar.out);
+#endif /* !CMAKE_DEBUG */
             // pass through next line
             fputs(line, stdout);
 #ifdef CMAKE_DEBUG
-            if (debug_line_differs)
+            if (!debug_line_differs)
                 fputc('\n', stdout);
 #endif /* CMAKE_DEBUG */
+            if (bar.flags & CMAKE_PB_PASS_THROUGH)
+                continue;
             return 0;
         }
 
         if ((err = update_progressbar(&bar, line))) {
+#ifndef CMAKE_DEBUG
             // newline after progress bar
             fputc('\n', bar.out);
+#endif /* !CMAKE_DEBUG */
             if (bar.flags & CMAKE_PB_PASS_THROUGH)
             {
                 fputs(line, stdout);
 #ifdef CMAKE_DEBUG
-                if (debug_line_differs)
+                if (!debug_line_differs)
                     fputc('\n', stdout);
 #endif /* CMAKE_DEBUG */
             } else {
@@ -80,9 +86,18 @@ int start_progressbar(char *line, size_t len, FILE *out, int flags) {
 #if defined(CMAKE_DEBUG) || defined(CMAKE_SLEEP_AFTER_DRAW)
         sleep(1);
 #endif /* CMAKE_DEBUG */
+
+        if (bar.cur >= bar.max) {
+#ifdef CMAKE_DEBUG
+            printf("Progress Bar is finished\n");
+#endif /* CMAKE_DEBUG */
+            break;
+        }
     }
+#ifndef CMAKE_DEBUG
     // newline after progress bar
     fputc('\n', bar.out);
+#endif /* !CMAKE_DEBUG */
     return 0;
 }
 
@@ -93,7 +108,10 @@ int update_progressbar(struct progressbar_t *bar, const char *line) {
         return 1;
     if (cur > USHRT_MAX || cur < 0)
         return 2;
-    bar->cur = (unsigned short) cur;
+    if (cur < bar->cur)
+        read_progressbar(line, bar);
+    else
+        bar->cur = (unsigned short) cur;
     return 0;
 }
 
@@ -121,9 +139,7 @@ int draw_progressbar(struct progressbar_t *bar) {
     return 0;
 }
 
-int read_progressbar(const char *line, struct progressbar_t *bar, FILE *out) {
-    bar->out = out;
-
+int read_progressbar(const char *line, struct progressbar_t *bar) {
     char *endptr = NULL;
     long cur, max;
     cur = strtol(line + 1, &endptr, 10);
