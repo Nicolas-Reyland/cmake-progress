@@ -15,3 +15,11 @@ add_executable(cmake_progress_test
 target_include_directories(cmake_progress_test PUBLIC src)
 target_link_options(cmake_progress_test PUBLIC -lcriterion)
 target_compile_options(cmake_progress_test PUBLIC -Wall -Wextra -Werror)
+
+add_custom_command(TARGET cmake_progress_test POST_BUILD
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/cmake_progress_test
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running the test suite..."
+)
+
+install(TARGETS cmake_progress DESTINATION bin)
