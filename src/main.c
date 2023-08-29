@@ -79,10 +79,11 @@ int main(int argc, char **argv) {
     size_t len = 0;
     char *line = NULL;
 
-    struct arguments arguments;
-
-    arguments.mode = STRICT_MODE;
-    arguments.width = 0;
+    struct arguments arguments = {
+            .mode = STRICT_MODE,
+            .width = 0,
+            .outfile = NULL,
+    };
 
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
