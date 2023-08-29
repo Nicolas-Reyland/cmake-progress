@@ -1,9 +1,9 @@
 this is sample text
 [0/3] x
 pass-through text
-[1/3] x
-[2/3] x
+[1/2] x
+[2/2] x
 this should be printed
-[3/3] x
+[3/9] x
 post-progressbar text
 once again, text
