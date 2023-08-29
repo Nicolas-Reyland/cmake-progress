@@ -3,7 +3,6 @@
 #include <limits.h>
 
 #include "progressbar.h"
-#include "../src/progressbar.h"
 
 #define STRINGIFY(x) #x
 
