@@ -17,6 +17,8 @@
 
 static int draw_progressbar(struct progressbar_t *bar);
 
+static void reset_line(struct progressbar_t *bar);
+
 int start_progressbar(char *line, size_t len, struct progressbar_t *bar) {
     ssize_t nb_read;;
     int err = 0;
@@ -32,7 +34,9 @@ int start_progressbar(char *line, size_t len, struct progressbar_t *bar) {
 #if defined(CMAKE_DEBUG) || defined(CMAKE_SLEEP_AFTER_DRAW)
     sleep(1);
 #endif /* CMAKE_DEBUG */
+#ifndef CMAKE_DEBUG
     int last_print_is_pb = 1;
+#endif /* !CMAKE_DEBUG */
 
     while ((nb_read = getline(&line, &len, stdin)) != -1) {
         if (nb_read == 0)
@@ -48,11 +52,16 @@ int start_progressbar(char *line, size_t len, struct progressbar_t *bar) {
 
         if (regexec(&full_regex, line, 0, NULL, 0) == REG_NOMATCH) {
 #ifndef CMAKE_DEBUG
-            // newline after progress bar
-            if (last_print_is_pb)
-                fputc('\n', bar->out);
-#endif /* !CMAKE_DEBUG */
+            // Reset line if needed
+            if (bar->flags & CMAKE_PB_PASS_THROUGH) {
+                // newline after progress bar
+                if (last_print_is_pb) {
+                    fputc('\n', bar->out);
+                }
+            } else
+                reset_line(bar);
             last_print_is_pb = 0;
+#endif /* !CMAKE_DEBUG */
             // pass through next line
             fputs(line, stdout);
 #ifdef CMAKE_DEBUG
@@ -75,7 +84,9 @@ int start_progressbar(char *line, size_t len, struct progressbar_t *bar) {
             return 1;
         }
         (void) draw_progressbar(bar);
+#ifndef CMAKE_DEBUG
         last_print_is_pb = 1;
+#endif /* !CMAKE_DEBUG */
 #if defined(CMAKE_DEBUG) || defined(CMAKE_SLEEP_AFTER_DRAW)
         sleep(1);
 #endif /* CMAKE_DEBUG */
@@ -92,6 +103,15 @@ int start_progressbar(char *line, size_t len, struct progressbar_t *bar) {
     fputc('\n', bar->out);
 #endif /* !CMAKE_DEBUG */
     return 0;
+}
+
+void reset_line(struct progressbar_t *bar) {
+    static const short pb_start_len = (short) strlen(CMAKE_PB_START);
+    static const short pb_end_len = (short) strlen(CMAKE_PB_END);
+    putc('\r', bar->out);
+    for (short i = 0; i < bar->bar_width + pb_start_len + pb_end_len; ++i)
+        fputc(' ', bar->out);
+    putc('\r', bar->out);
 }
 
 int update_progressbar(struct progressbar_t *bar, const char *line) {
