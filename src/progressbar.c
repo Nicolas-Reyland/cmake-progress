@@ -109,7 +109,7 @@ void reset_line(struct progressbar_t *bar) {
     static const short pb_start_len = (short) strlen(CMAKE_PB_START);
     static const short pb_end_len = (short) strlen(CMAKE_PB_END);
     putc('\r', bar->out);
-    for (short i = 0; i < bar->bar_width + pb_start_len + pb_end_len; ++i)
+    for (short i = 0; (int) i < bar->bar_width + pb_start_len + pb_end_len; ++i)
         fputc(' ', bar->out);
     putc('\r', bar->out);
 }
